@@ -9,6 +9,11 @@ contract Donate {
         uint amount
     );
 
+    event Withdraw(wallet_address, amount);(
+        address indexed wallet_address
+        uint amount
+    );
+
     struct Donor {
         string name;
         string phone;
@@ -58,6 +63,8 @@ contract Donate {
             revert("Organisation Does not exist!");
         }
 
+        // TODO: Refactor to send the token to the contract instead of sending it to the organisation directly
+
         payable(msg.sender).transfer(amount);
 
         emit DonationSent(sender_address, reciever_address, amount);
@@ -76,5 +83,25 @@ contract Donate {
         RegisteredDonors[sender_address].name = name;
         RegisteredDonors[sender_address].phone = phone;
         RegisteredDonors[sender_address].sAddr = sender_address;
+    }
+
+    // Implement the withdrawal function to withdraw the funds from the contract so as to be able to track donations
+
+    function Withdraw(address wallet_address, uint amount) public payable {
+        //Debit Transation has a variable called msg that has methods
+        address wallet_address = msg.sender;
+        uint amount = msg.value;
+
+        if (RegisteredDonors[wallet_address].sAddr != wallet_address) {
+            revert("You donot have an account!");
+        }
+
+        if (RegisteredOrganisations[wallet_address].rAddr != wallet_address) {
+            revert("Organisation Does not exist!");
+        }
+
+        payable(msg.sender).transfer(amount);
+
+        emit Withdraw(wallet_address, amount);
     }
 }
