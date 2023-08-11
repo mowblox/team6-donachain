@@ -19,7 +19,7 @@ contract Donate {
 
     struct Organisation {
         string name;
-        string phone;
+        string description;
         uint balance;
         address rAddr;
     }
@@ -78,10 +78,13 @@ contract Donate {
     }
 
     // Authenticate user and add users
-    function AddOrganisation(string memory name, string memory phone) public {
+    function AddOrganisation(
+        string memory name,
+        string memory description
+    ) public {
         address reciever_address = msg.sender;
         RegisteredOrganisations[reciever_address].name = name;
-        RegisteredOrganisations[reciever_address].phone = phone;
+        RegisteredOrganisations[reciever_address].description = description;
         RegisteredOrganisations[reciever_address].rAddr = reciever_address;
     }
 
