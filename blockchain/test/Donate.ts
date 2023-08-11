@@ -29,7 +29,7 @@ describe('Donor', function () {
 
         //    console.log(orgData);
 
-           expect(orgData[2]).to.equal(org1.address);
+           expect(orgData[3]).to.equal(org1.address);
         })
 
         it ("Check Send Donation", async function(){
@@ -46,11 +46,31 @@ describe('Donor', function () {
 
         })
 
-        // it("Check list of Donation from Donors", async function(){
-        //     const addr;
-        // })
+        it ("Check Send Withdraw", async function(){
+            const {donate, org1, sender1} = await loadFixture(deployDonationFixture);
+            const amount  = ethers.parseEther("100")
+            const name = "John Smith";
+            const phone = "555-555";
+           await donate.connect(org1).AddOrganisation(name, phone);
+           await donate.connect(sender1).AddDonor(name, phone);
+            
+           await donate.connect(sender1).sendDonation(org1, {value: amount})
 
+          expect(await donate.connect(org1).OrgWithdraw())
+          .to.emit(donate, "FundWithdraw")
+          .withArgs(org1, amount); 
 
+        })
+
+        //User must be resgister
+
+        //Organisation must be registered
+
+        // User must have donated to the organisation
+
+        // organisation to check and track balance
+
+        // organisation must move funds from contract to their wallet
     })
 
     

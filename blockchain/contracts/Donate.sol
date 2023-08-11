@@ -9,10 +9,7 @@ contract Donate {
         uint amount
     );
 
-    event Withdraw(wallet_address, amount);(
-        address indexed wallet_address
-        uint amount
-    );
+    event FundWithdraw(address indexed wallete, uint amount);
 
     struct Donor {
         string name;
@@ -23,12 +20,15 @@ contract Donate {
     struct Organisation {
         string name;
         string phone;
+        uint balance;
         address rAddr;
     }
 
     mapping(address => Donor) RegisteredDonors;
 
     mapping(address => Organisation) RegisteredOrganisations;
+
+    uint totalBalances; // track balance for everyone
 
     // Get project details {organization id , organization address , project id }
     function getRegisteredDonor(
@@ -45,7 +45,11 @@ contract Donate {
     }
 
     // Check if donor address has sufficient amount of money
-    function checkBalance() public {}
+    function checkBalance(address wallet) public {}
+
+    function checkOrgBalance(address orgAddr) public view returns (uint) {
+        return RegisteredOrganisations[orgAddr].balance;
+    }
 
     // Transfer donation
     function sendDonation(address reciever_address) public payable {
@@ -65,12 +69,15 @@ contract Donate {
 
         // TODO: Refactor to send the token to the contract instead of sending it to the organisation directly
 
-        payable(msg.sender).transfer(amount);
+        // payable(msg.sender).transfer(amount);
+        // bool sent = payable(sender_address).send(msg.value);
+        totalBalances += amount;
+        RegisteredOrganisations[reciever_address].balance += amount;
 
         emit DonationSent(sender_address, reciever_address, amount);
     }
 
-    // Authenticate user
+    // Authenticate user and add users
     function AddOrganisation(string memory name, string memory phone) public {
         address reciever_address = msg.sender;
         RegisteredOrganisations[reciever_address].name = name;
@@ -85,23 +92,19 @@ contract Donate {
         RegisteredDonors[sender_address].sAddr = sender_address;
     }
 
-    // Implement the withdrawal function to withdraw the funds from the contract so as to be able to track donations
+    // TODO: Implement the withdrawal function to withdraw the funds from the contract so as to be able to track donations
+    function OrgWithdraw() external payable {
+        address addr = msg.sender;
 
-    function Withdraw(address wallet_address, uint amount) public payable {
-        //Debit Transation has a variable called msg that has methods
-        address wallet_address = msg.sender;
-        uint amount = msg.value;
+        require(
+            RegisteredOrganisations[addr].rAddr == addr,
+            "Address Not Found, Must register to be able to withdraw."
+        );
 
-        if (RegisteredDonors[wallet_address].sAddr != wallet_address) {
-            revert("You donot have an account!");
-        }
+        uint amount = checkOrgBalance(addr);
+        RegisteredOrganisations[addr].balance = 0;
 
-        if (RegisteredOrganisations[wallet_address].rAddr != wallet_address) {
-            revert("Organisation Does not exist!");
-        }
-
-        payable(msg.sender).transfer(amount);
-
-        emit Withdraw(wallet_address, amount);
+        payable(addr).transfer(amount);
+        emit FundWithdraw(addr, amount);
     }
 }
